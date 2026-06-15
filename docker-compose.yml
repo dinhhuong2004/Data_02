@@ -1,0 +1,113 @@
+# docker-compose.yml
+# Môi trường local: SQL Server + Kafka + Debezium + Kafka UI
+# Dữ liệu được lưu bằng Docker Volumes, nên `docker compose down`sẽ KHÔNG làm mất dữ liệu.
+# Chỉ khi dùng `docker compose down -v` thì volumes mới bị xóa.
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Wenami@12345"
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql   # Lưu toàn bộ database files (.mdf, .ldf)
+    restart: unless-stopped
+
+  # schema-registry:
+  #   image: confluentinc/cp-schema-registry:7.5.0
+  #   container_name: schema-registry
+  #   depends_on:
+  #     - kafka
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:29092
+  #     SCHEMA_REGISTRY_HOST_NAME: schema-registry
+  #     SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+  zookeeper:
+    image: zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_datalog:/datalog
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"     # Truy cập từ host (localhost)
+      - "29092:29092"   # Truy cập nội bộ giữa các container
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # 2 listeners:
+      # - PLAINTEXT      -> dùng trong Docker network
+      # - PLAINTEXT_HOST -> dùng từ máy host
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data  # Lưu topics và offsets
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: unless-stopped
+
+  debezium:
+    image: quay.io/debezium/connect:2.5
+    container_name: debezium
+    depends_on:
+      - kafka
+      - sqlserver
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: 1
+
+      # Internal topics của Kafka Connect
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+
+      CONNECT_REST_ADVERTISED_HOST_NAME: debezium
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+    volumes:
+      - debezium_data:/kafka/connect   # Lưu plugin/config cache
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  zookeeper_data:
+  zookeeper_datalog:
+  kafka_data:
+  debezium_data:
