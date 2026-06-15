@@ -1,0 +1,34 @@
+# ── Database / SQL Server ────────────────────────────────────────────────────
+pyodbc==5.2.0
+sqlalchemy==2.0.41
+pymssql==2.3.4
+
+# ── Kafka / Streaming ────────────────────────────────────────────────────────
+confluent-kafka==2.10.0
+kafka-python==2.2.10
+
+# ── Data Processing ──────────────────────────────────────────────────────────
+pandas==2.2.3
+numpy==2.2.6
+pyarrow==20.0.0
+
+# ── Data Ingestion / Integration ─────────────────────────────────────────────
+requests==2.32.3
+httpx==0.28.1
+pydantic==2.11.5
+
+# ── Data Storage ─────────────────────────────────────────────────────────────
+psycopg2-binary==2.9.10       # PostgreSQL (if used as sink)
+redis==5.3.0                  # caching layer
+
+# ── Data Analysis ────────────────────────────────────────────────────────────
+scipy==1.15.3
+matplotlib==3.10.3
+seaborn==0.13.2
+jupyterlab==4.4.2
+
+# ── Utilities ────────────────────────────────────────────────────────────────
+python-dotenv==1.1.0
+loguru==0.7.3
+tenacity==9.1.2               # retry logic
+schedule==1.2.2               # simple job scheduling
