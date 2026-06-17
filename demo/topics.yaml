@@ -1,0 +1,114 @@
+# ==========================================================
+# Kafka Topics Definition
+# ==========================================================
+# Mục đích:
+# - Quản lý tập trung toàn bộ Kafka Topics
+# - Hỗ trợ tự động tạo topic khi deploy
+# - Dễ audit và version control
+#
+# partition:
+#   Số lượng partition của topic
+#
+# replication_factor:
+#   Số lượng bản sao
+#
+# retention_ms:
+#   Thời gian lưu dữ liệu trong Kafka
+#
+# cleanup_policy:
+#   delete : xóa sau retention
+#   compact: giữ record cuối cùng theo key
+#
+# ==========================================================
+
+topics:
+
+  # ========================================================
+  # USER EVENTS
+  # ========================================================
+
+  - name: test.ioe.login_events
+    partitions: 3       # Số lượng partition có thể điều chỉnh dựa trên throughput dự kiến
+    replication_factor: 1 # Trong môi trường local chỉ cần 1 replica, nhưng trong production nên là 3 để đảm bảo fault tolerance
+    retention_ms: 604800000 # 7 ngày
+    cleanup_policy: delete  # Xóa sau retention, vì login events thường không cần giữ lâu
+    description: User login events  
+
+  - name: test.ioe.logout_events
+    partitions: 3
+    replication_factor: 1 # Trong môi trường local chỉ cần 1 replica, nhưng trong production nên là 3 để đảm bảo fault tolerance  
+    retention_ms: 604800000
+    cleanup_policy: delete
+    description: User logout events
+
+  # ========================================================
+  # LEARNING EVENTS
+  # ========================================================
+
+  # - name: test.ioe.learning_events
+  #   partitions: 6
+  #   replication_factor: 1
+  #   retention_ms: 604800000
+  #   cleanup_policy: delete
+  #   description: Learning activity events
+
+  # - name: test.ioe.exam_events
+  #   partitions: 6
+  #   replication_factor: 1
+  #   retention_ms: 604800000
+  #   cleanup_policy: delete
+  #   description: Exam related events
+
+  # # ========================================================
+  # # PAYMENT EVENTS
+  # # ========================================================
+
+  # - name: test.ioe.payment_events
+  #   partitions: 3
+  #   replication_factor: 1
+  #   retention_ms: 2592000000 # 30 ngày
+  #   cleanup_policy: delete
+  #   description: Payment transactions
+
+  # # ========================================================
+  # # USER CDC
+  # # ========================================================
+
+  # - name: test.ioe.cdc.users
+  #   partitions: 3
+  #   replication_factor: 1
+  #   retention_ms: 2592000000
+  #   cleanup_policy: compact
+  #   description: User CDC events
+
+  # - name: test.ioe.cdc.schools
+  #   partitions: 3
+  #   replication_factor: 1
+  #   retention_ms: 2592000000
+  #   cleanup_policy: compact
+  #   description: School CDC events
+
+  # - name: test.ioe.cdc.courses
+  #   partitions: 3
+  #   replication_factor: 1
+  #   retention_ms: 2592000000
+  #   cleanup_policy: compact
+  #   description: Course CDC events
+
+  # # ========================================================
+  # # SYSTEM
+  # # ========================================================
+
+  # - name: test.system.dead_letter
+  #   partitions: 1
+  #   replication_factor: 1
+  #   retention_ms: 2592000000
+  #   cleanup_policy: delete
+  #   description: Invalid events / processing failures
+
+  # - name: test.system.audit_log
+  #   partitions: 1
+  #   replication_factor: 1
+  #   retention_ms: 7776000000 # 90 ngày
+  #   cleanup_policy: delete
+  #   description: Audit logs

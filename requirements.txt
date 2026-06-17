@@ -32,3 +32,7 @@ python-dotenv==1.1.0
 loguru==0.7.3
 tenacity==9.1.2               # retry logic
 schedule==1.2.2               # simple job scheduling
+
+faker==18.3.1                   # data generation for testing
+
+pyspark==3.5.2                     # if using Spark for processing

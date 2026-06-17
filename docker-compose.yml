@@ -61,6 +61,7 @@ services:
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
     volumes:
       - kafka_data:/var/lib/kafka/data  # Lưu topics và offsets
     restart: unless-stopped
@@ -103,6 +104,22 @@ services:
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
     volumes:
       - debezium_data:/kafka/connect   # Lưu plugin/config cache
+    restart: unless-stopped
+
+  spark:
+    image: apache/spark:3.5.5
+    container_name: spark
+
+    ports:
+      - "8088:8080"
+
+    volumes:
+      - ./spark:/opt/spark-apps
+
+    command: >
+      /opt/spark/bin/spark-class
+      org.apache.spark.deploy.master.Master
+
     restart: unless-stopped
 
 volumes:
