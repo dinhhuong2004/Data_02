@@ -17,6 +17,7 @@ df = (
     .option("startingOffsets", "latest")
     .load()
 )
+df.printSchema()
 
 result = df.selectExpr(
     "CAST(value AS STRING) as json_payload"

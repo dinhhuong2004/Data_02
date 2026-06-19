@@ -1,0 +1,18 @@
+topics:
+
+  - name: ioe.login_events
+    partitions: 6   # Tăng số partitions để cải thiện khả năng xử lý song song
+    replication_factor: 3
+    config:
+      cleanup_policy: delete
+      segment_ms: 3600000          # 1 giờ
+      retention_ms: 604800000      # 7 ngày
+      segment_bytes: 1073741824    # 1 GB
+  - name: ioe.logout_events
+    partitions: 6
+    replication_factor: 3
+    config:
+      cleanup_policy: delete
+      segment_ms: 3600000          # 1 giờ
+      retention_ms: 604800000      # 7 ngày
+      segment_bytes: 1073741824    # 1 GB

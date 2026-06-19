@@ -121,10 +121,49 @@ services:
       org.apache.spark.deploy.master.Master
 
     restart: unless-stopped
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+
+    command: server /data --console-address ":9001"
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123456
+
+    volumes:
+      - minio_data:/data
+
+    restart: unless-stopped
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+
+    environment:
+      CLICKHOUSE_DB: realtime
+      CLICKHOUSE_USER: admin
+      CLICKHOUSE_PASSWORD: admin123
+
+    ports:
+      - "8123:8123"
+      - "9002:9000"
+
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+
+    restart: unless-stopped
 
 volumes:
   sqlserver_data:
   zookeeper_data:
   zookeeper_datalog:
   kafka_data:
+  minio_data:
+  spark_data:
   debezium_data:
+  clickhouse_data:
