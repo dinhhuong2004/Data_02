@@ -1,12 +1,24 @@
 # api.py
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, Response
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse, Response, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import requests
+import os
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 CLICKHOUSE_URL = "http://localhost:8123/"
 AUTH = ("admin", "admin123")
+
+SUPERSET_URL = "http://localhost:8089"
+SUPERSET_ADMIN = {"username": "admin", "password": "admin", "provider": "db", "refresh": False}
 
 def query_clickhouse(sql: str):
     response = requests.get(
@@ -262,6 +274,12 @@ def dashboard():
 </html>
 """
 
+@app.get("/superset", response_class=HTMLResponse)
+def superset_page():
+    path = os.path.join(os.path.dirname(__file__), "superset_chart.html")
+    with open(path) as f:
+        return f.read()
+
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
     return Response(status_code=204)
@@ -317,3 +335,35 @@ def by_acc_type():
     ORDER BY acc_type
     """
     return query_clickhouse(sql)
+
+
+@app.get("/superset/guest-token")
+def superset_guest_token(embedded_id: str):
+    # Step 1: login to get access token
+    login = requests.post(
+        f"{SUPERSET_URL}/api/v1/security/login",
+        json=SUPERSET_ADMIN,
+        timeout=10,
+    )
+    login.raise_for_status()
+    access_token = login.json().get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=502, detail="Superset login failed")
+
+    # Step 2: get guest token for the embedded dashboard
+    guest = requests.post(
+        f"{SUPERSET_URL}/api/v1/security/guest_token/",
+        json={
+            "resources": [{"type": "dashboard", "id": embedded_id}],
+            "rls": [],
+            "user": {"username": "guest", "first_name": "Guest", "last_name": "User"},
+        },
+        headers={"Authorization": f"Bearer {access_token}"},
+        timeout=10,
+    )
+    guest.raise_for_status()
+    token = guest.json().get("token")
+    if not token:
+        raise HTTPException(status_code=502, detail="Failed to get guest token")
+
+    return {"token": token}
