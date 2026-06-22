@@ -1,8 +1,14 @@
 from kafka.admin import KafkaAdminClient, NewTopic
 from kafka.errors import TopicAlreadyExistsError
 import yaml
+import os
+from dotenv import load_dotenv
 
-BOOTSTRAP_SERVERS = "localhost:9092"
+load_dotenv(".env.dev")
+
+BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
+if not BOOTSTRAP_SERVERS:
+    raise ValueError("KAFKA_BOOTSTRAP_SERVERS is not configured")
 
 
 def load_topics():

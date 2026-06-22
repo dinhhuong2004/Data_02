@@ -1,6 +1,10 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 import sys
+import os
+from dotenv import load_dotenv
+
+load_dotenv(".env.dev")
 
 sys.path.append(".")
 
@@ -10,6 +14,9 @@ from deduplication import deduplicate_events
 from console_sink import write_console
 from clickhouse_sink_login import write_to_clickhouse
 
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
+if not KAFKA_BOOTSTRAP_SERVERS:
+    raise ValueError("KAFKA_BOOTSTRAP_SERVERS is not configured")
 
 spark = (
     SparkSession.builder
@@ -27,7 +34,7 @@ spark.sparkContext.setLogLevel("WARN")
 raw_df = (
     spark.readStream
     .format("kafka")
-    .option("kafka.bootstrap.servers", "localhost:9092")
+    .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVERS)
     .option("subscribe", "test.ioe.login_events")
     .option("startingOffsets", "latest")
     .load()

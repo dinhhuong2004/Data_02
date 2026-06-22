@@ -3,15 +3,33 @@ import json
 import uuid
 import random
 import time
+import os
 
 from collections import defaultdict, deque
 from datetime import datetime, timezone
+from dotenv import load_dotenv
 
+load_dotenv(".env.dev")
 
+KAFKA_BOOTSTRAP_SERVERS = os.getenv(
+    "KAFKA_BOOTSTRAP_SERVERS"
+)
+if not KAFKA_BOOTSTRAP_SERVERS:
+    raise ValueError(
+        "KAFKA_BOOTSTRAP_SERVERS is not configured"
+    )
+# producer = KafkaProducer(
+#     bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+#     api_version=(3, 5, 0),
+#     value_serializer=lambda x: json.dumps(x).encode("utf-8")
+# )
 producer = KafkaProducer(
-    bootstrap_servers="localhost:9092",
-    api_version=(3, 5, 0),
-    value_serializer=lambda x: json.dumps(x).encode("utf-8")
+    bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS.split(","),
+    value_serializer=lambda v: json.dumps(v).encode("utf-8")
+)
+print(
+    "Kafka connected:",
+    producer.bootstrap_connected()
 )
 
 TOPIC = "test.ioe.login_events"
