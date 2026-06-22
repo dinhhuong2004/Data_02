@@ -29,11 +29,12 @@ services:
     ports:
       - "8089:8088"
     environment:
-      SUPERSET_SECRET_KEY: "superset_secret_key_change_me"
+      SUPERSET_SECRET_KEY: "wenami-superset-dev-2026"
       DATABASE_URL: "postgresql+psycopg2://superset:superset123@superset-db:5432/superset"
       REDIS_URL: "redis://superset-redis:6379/0"
     volumes:
       - superset_home:/app/superset_home
+      - ./superset_config.py:/app/pythonpath/superset_config.py
     restart: unless-stopped
 
 volumes:
