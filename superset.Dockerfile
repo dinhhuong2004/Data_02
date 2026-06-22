@@ -1,5 +1,5 @@
 FROM apache/superset:latest
 
 USER root
-RUN uv pip install --system --python /app/.venv/bin/python clickhouse-connect
+RUN uv pip install --system --python /app/.venv/bin/python clickhouse-connect psycopg2-binary
 USER superset
