@@ -1,0 +1,42 @@
+services:
+  superset-db:
+    image: postgres:15-alpine
+    container_name: superset-db
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset123
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  superset-redis:
+    image: redis:7-alpine
+    container_name: superset-redis
+    volumes:
+      - superset_redis_data:/data
+    restart: unless-stopped
+
+  superset:
+    build:
+      context: .
+      dockerfile: superset.Dockerfile
+    image: superset-clickhouse:latest
+    container_name: superset
+    depends_on:
+      - superset-db
+      - superset-redis
+    ports:
+      - "8089:8088"
+    environment:
+      SUPERSET_SECRET_KEY: "superset_secret_key_change_me"
+      DATABASE_URL: "postgresql+psycopg2://superset:superset123@superset-db:5432/superset"
+      REDIS_URL: "redis://superset-redis:6379/0"
+    volumes:
+      - superset_home:/app/superset_home
+    restart: unless-stopped
+
+volumes:
+  superset_db_data:
+  superset_redis_data:
+  superset_home:
